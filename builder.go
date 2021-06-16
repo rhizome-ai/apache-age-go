@@ -23,7 +23,7 @@ func NewAGUnmarshaler() *AGUnmarshaler {
 	return m
 }
 
-func (p *AGUnmarshaler) unmarshalAGResult(text string) Entity {
+func (p *AGUnmarshaler) unmarshal(text string) (Entity, error) {
 	input := antlr.NewInputStream(text)
 	lexer := parser.NewAgeLexer(input)
 	stream := antlr.NewCommonTokenStream(lexer, 0)
@@ -31,11 +31,25 @@ func (p *AGUnmarshaler) unmarshalAGResult(text string) Entity {
 	tree := p.ageParser.Ageout()
 	rst := tree.Accept(p.visitor)
 
-	for e := range p.errListener.errList {
-		fmt.Println(e)
+	if len(p.errListener.errList) > 0 {
+		var ape *AgeParseError = nil
+		errs := make([]string, len(p.errListener.errList))
+		for idx, re := range p.errListener.errList {
+			errs[idx] = re.GetMessage()
+			fmt.Println(re)
+		}
+		p.errListener.clearErrs()
+
+		ape = &AgeParseError{msg: "Cypher query:" + text, errors: errs}
+
+		return nil, ape
 	}
-	p.errListener.clearErrs()
-	return rst.(Entity)
+
+	if !IsEntity(rst) {
+		rst = NewSimpleEntity(rst)
+	}
+
+	return rst.(Entity), nil
 }
 
 type AGErrorListener struct {
