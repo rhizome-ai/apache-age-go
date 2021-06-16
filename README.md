@@ -1,6 +1,6 @@
 # apache-age-go
 
-Go driver support for Apache AGE, graph extention for PostgreSQL.
+Go driver support for [Apache AGE](https://age.apache.org/), graph extention for PostgreSQL.
 
 ### Go get & gomod
 * over Go 1.16
@@ -15,6 +15,11 @@ require  github.com/rhizome-ai/apache-age-go v0.0.1
  
 ```
 Check [latest version](https://github.com/rhizome-ai/apache-age-go/releases)
+
+### For more information about [Apache AGE](https://age.apache.org/)
+* Apache Incubator Age : https://age.apache.org/
+* Github : https://github.com/apache/incubator-age
+* Document : https://age.incubator.apache.org/docs/
 
 ### Check AGE loaded on your PostgreSQL
 Connect to your containerized Postgres instance and then run the following commands:
