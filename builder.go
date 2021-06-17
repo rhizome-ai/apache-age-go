@@ -13,11 +13,16 @@ type AGUnmarshaler struct {
 	ageParser   *parser.AgeParser
 	visitor     *UnmarshalVisitor
 	errListener *AGErrorListener
+	vcache      map[int64]*Vertex
 }
 
 func NewAGUnmarshaler() *AGUnmarshaler {
+	vcache := make(map[int64]*Vertex)
 	m := &AGUnmarshaler{ageParser: parser.NewAgeParser(nil),
-		visitor: &UnmarshalVisitor{}, errListener: NewAGErrorListener()}
+		visitor:     &UnmarshalVisitor{vcache: vcache},
+		errListener: NewAGErrorListener(),
+		vcache:      vcache,
+	}
 	m.ageParser.AddErrorListener(m.errListener)
 
 	return m
@@ -74,6 +79,7 @@ func (el *AGErrorListener) clearErrs() {
 
 type UnmarshalVisitor struct {
 	parser.AgeVisitor
+	vcache map[int64]*Vertex
 }
 
 func (v *UnmarshalVisitor) Visit(tree antlr.ParseTree) interface{} { return nil }
@@ -97,7 +103,11 @@ func (v *UnmarshalVisitor) VisitVertex(ctx *parser.VertexContext) interface{} {
 	propCtx := ctx.Properties()
 	props := propCtx.Accept(v).(map[string]interface{})
 	// fmt.Println(" * VisitVertex:", props)
-	vertex := NewVertex(props["id"].(int64), props["label"].(string), props["properties"].(map[string]interface{}))
+	vertex, ok := v.vcache[props["id"].(int64)]
+
+	if !ok {
+		vertex = NewVertex(props["id"].(int64), props["label"].(string), props["properties"].(map[string]interface{}))
+	}
 
 	return vertex
 }

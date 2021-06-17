@@ -76,15 +76,39 @@ func (e *SimpleEntity) String() string {
 	return fmt.Sprintf("%v", e.value)
 }
 
+func (e *SimpleEntity) AsStr() string {
+	return e.value.(string)
+}
+
+func (e *SimpleEntity) AsInt() int64 {
+	return e.value.(int64)
+}
+
+func (e *SimpleEntity) AsFloat() float64 {
+	return e.value.(float64)
+}
+
+func (e *SimpleEntity) AsBool() bool {
+	return e.value.(bool)
+}
+
+func (e *SimpleEntity) AsMap() map[string]interface{} {
+	return e.value.(map[string]interface{})
+}
+
+func (e *SimpleEntity) AsArr() []interface{} {
+	return e.value.([]interface{})
+}
+
 type Node struct {
 	Entity
-	id         int64
-	label      string
-	properties map[string]interface{}
+	id    int64
+	label string
+	props map[string]interface{}
 }
 
 func newNode(id int64, label string, props map[string]interface{}) *Node {
-	return &Node{id: id, label: label, properties: props}
+	return &Node{id: id, label: label, props: props}
 }
 
 func (n *Node) Id() int64 {
@@ -96,7 +120,7 @@ func (n *Node) Label() string {
 }
 
 func (n *Node) Prop(key string) interface{} {
-	return n.properties[key]
+	return n.props[key]
 }
 
 type Vertex struct {
@@ -112,7 +136,7 @@ func (v *Vertex) GType() GTYPE {
 }
 
 func (v *Vertex) String() string {
-	return fmt.Sprintf("V{id:%d, label:%s, properties:%v}", v.id, v.label, v.properties)
+	return fmt.Sprintf("V{id:%d, label:%s, props:%v}", v.id, v.label, v.props)
 }
 
 type Edge struct {
@@ -138,8 +162,8 @@ func (e *Edge) EndId() int64 {
 }
 
 func (e *Edge) String() string {
-	return fmt.Sprintf("E{id:%d, label:%s, start:%d, end:%d, properties:%v}",
-		e.id, e.label, e.start_id, e.end_id, e.properties)
+	return fmt.Sprintf("E{id:%d, label:%s, start:%d, end:%d, props:%v}",
+		e.id, e.label, e.start_id, e.end_id, e.props)
 }
 
 type Path struct {

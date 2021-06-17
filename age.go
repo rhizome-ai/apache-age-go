@@ -5,6 +5,66 @@ import (
 	"fmt"
 )
 
+func GetReady(db *sql.DB, graphName string) (bool, error) {
+	tx, err := db.Begin()
+	if err != nil {
+		return false, err
+	}
+
+	_, err = tx.Exec("LOAD 'age';")
+	if err != nil {
+		return false, err
+	}
+
+	_, err = tx.Exec("SET search_path = ag_catalog, '$user', public;")
+	if err != nil {
+		return false, err
+	}
+
+	var count int = 0
+
+	err = tx.QueryRow("SELECT count(*) FROM ag_graph WHERE name=$1", graphName).Scan(&count)
+
+	if err != nil {
+		return false, err
+	}
+
+	if count == 0 {
+		_, err = tx.Exec("SELECT create_graph($1);", graphName)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	tx.Commit()
+
+	return true, nil
+}
+
+/** CREATE , DROP .... */
+func ExecCypher(tx *sql.Tx, graphName string, cypher string, args ...interface{}) error {
+	cypherStmt := fmt.Sprintf(cypher, args...)
+	stmt := fmt.Sprintf("SELECT * from cypher('%s', $$ %s $$) as (v agtype);",
+		graphName, cypherStmt)
+
+	_, err := tx.Exec(stmt)
+	return err
+}
+
+/** MATCH .... RETURN .... */
+func QueryCypher(tx *sql.Tx, graphName string, cypher string, args ...interface{}) (*CypherCursor, error) {
+	cypherStmt := fmt.Sprintf(cypher, args...)
+	stmt := fmt.Sprintf("SELECT * from cypher('%s', $$ %s $$) as (v agtype);",
+		graphName, cypherStmt)
+
+	rows, err := tx.Query(stmt)
+	if err != nil {
+		return nil, err
+	} else {
+		return NewCypherCursor(rows), nil
+	}
+}
+
 type Age struct {
 	db        *sql.DB
 	graphName string
@@ -115,10 +175,7 @@ func (a *AgeTx) ExecCypher(cypher string, args ...interface{}) error {
 		a.age.graphName, cypherStmt)
 
 	_, err := a.tx.Exec(stmt)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 /** MATCH .... RETURN .... */

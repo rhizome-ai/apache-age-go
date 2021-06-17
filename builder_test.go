@@ -29,8 +29,8 @@ func TestPathParsing(t *testing.T) {
 	p2 := entity2.(*Path)
 	p3 := entity3.(*Path)
 
-	assert.Equal(t, p1.end.properties["name"], p2.start.properties["name"])
-	assert.Equal(t, p2.start.properties["name"], p3.start.properties["name"])
+	assert.Equal(t, p1.end.props["name"], p2.start.props["name"])
+	assert.Equal(t, p2.start.props["name"], p3.start.props["name"])
 
 	// fmt.Println(entity1)
 	// fmt.Println(entity2)
