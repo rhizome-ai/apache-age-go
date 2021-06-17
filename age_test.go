@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"testing"
+
+	_ "github.com/lib/pq"
 )
 
 var dsn string = "host=127.0.0.1 port=5432 dbname=postgres user=postgres password=agens sslmode=disable"

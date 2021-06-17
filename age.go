@@ -3,8 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-
-	_ "github.com/lib/pq"
 )
 
 type Age struct {
