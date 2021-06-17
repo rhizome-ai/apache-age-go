@@ -29,7 +29,7 @@ func TestAdditional(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = ExecCypher(cursor, graphName, "CREATE (n:Person {name: '%s', weight:77.3})", "Jack")
+	err = ExecCypher(cursor, graphName, "CREATE (n:Person {name: '%s', weight:77.3, roles:['Dev','marketing']})", "Jack")
 	if err != nil {
 		t.Fatal(err)
 	}
