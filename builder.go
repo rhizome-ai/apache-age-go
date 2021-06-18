@@ -2,12 +2,18 @@ package main
 
 import (
 	"fmt"
+	"math/big"
 	"strconv"
 	"strings"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 	"github.com/rhizome-ai/apache-age-go/parser"
 )
+
+const MaxUint = ^uint(0)
+const MaxInt = int(MaxUint >> 1)
+const MinUint = 0
+const MinInt = -MaxInt - 1
 
 type AGUnmarshaler struct {
 	ageParser   *parser.AgeParser
@@ -103,10 +109,11 @@ func (v *UnmarshalVisitor) VisitVertex(ctx *parser.VertexContext) interface{} {
 	propCtx := ctx.Properties()
 	props := propCtx.Accept(v).(map[string]interface{})
 	// fmt.Println(" * VisitVertex:", props)
-	vertex, ok := v.vcache[props["id"].(int64)]
+	vid := int64(props["id"].(int))
+	vertex, ok := v.vcache[vid]
 
 	if !ok {
-		vertex = NewVertex(props["id"].(int64), props["label"].(string), props["properties"].(map[string]interface{}))
+		vertex = NewVertex(vid, props["label"].(string), props["properties"].(map[string]interface{}))
 	}
 
 	return vertex
@@ -118,8 +125,8 @@ func (v *UnmarshalVisitor) VisitEdge(ctx *parser.EdgeContext) interface{} {
 	props := propCtx.Accept(v).(map[string]interface{})
 	// fmt.Println(" * VisitEdge:", props)
 
-	edge := NewEdge(props["id"].(int64), props["label"].(string),
-		props["start_id"].(int64), props["end_id"].(int64),
+	edge := NewEdge(int64(props["id"].(int)), props["label"].(string),
+		int64(props["start_id"].(int)), int64(props["end_id"].(int)),
 		props["properties"].(map[string]interface{}))
 
 	return edge
@@ -196,18 +203,18 @@ func unmarshalTerm(ctx *antlr.TerminalNodeImpl) (interface{}, error) {
 		return strings.Trim(txt, "\""), nil
 	case parser.AgeLexerNUMBER:
 		if strings.Contains(txt, ".") {
-			s, err := strconv.ParseFloat(txt, 64)
-			if err != nil {
-				return nil, err
-			} else {
-				return s, nil
-			}
+			return strconv.ParseFloat(txt, 64)
 		} else {
 			s, err := strconv.ParseInt(txt, 10, 64)
 			if err != nil {
-				return nil, err
+				bi := new(big.Int)
+				bi, ok := bi.SetString(txt, 10)
+				if !ok {
+					return nil, &AgeParseError{msg: "Parse big number " + txt}
+				}
+				return bi, nil
 			} else {
-				return s, nil
+				return int(s), nil
 			}
 		}
 	case parser.AgeLexerBOOL:

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/big"
 	"reflect"
 )
 
@@ -14,6 +15,7 @@ const (
 	G_PATH
 	G_STR
 	G_INT
+	G_INTBIG
 	G_FLOAT
 	G_BOOL
 	G_MAP
@@ -24,7 +26,8 @@ var _TpV = reflect.TypeOf(&Vertex{})
 var _TpE = reflect.TypeOf(&Edge{})
 var _TpP = reflect.TypeOf(&Path{})
 var _TpStr = reflect.TypeOf(string(""))
-var _TpInt = reflect.TypeOf(int64(0))
+var _TpInt = reflect.TypeOf(int(0))
+var _TpIntBig = reflect.TypeOf(big.NewInt(0))
 var _TpFloat = reflect.TypeOf(float64(0))
 var _TpBool = reflect.TypeOf(bool(false))
 var _TpMap = reflect.TypeOf(map[string]interface{}{})
@@ -49,8 +52,10 @@ func NewSimpleEntity(value interface{}) *SimpleEntity {
 	switch value.(type) {
 	case string:
 		return &SimpleEntity{typ: G_STR, value: value}
-	case int64:
+	case int:
 		return &SimpleEntity{typ: G_INT, value: value}
+	case *big.Int:
+		return &SimpleEntity{typ: G_INTBIG, value: value}
 	case float64:
 		return &SimpleEntity{typ: G_FLOAT, value: value}
 	case bool:
@@ -80,7 +85,11 @@ func (e *SimpleEntity) AsStr() string {
 	return e.value.(string)
 }
 
-func (e *SimpleEntity) AsInt() int64 {
+func (e *SimpleEntity) AsInt() int {
+	return e.value.(int)
+}
+
+func (e *SimpleEntity) AsInt64() int64 {
 	return e.value.(int64)
 }
 

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"math/big"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -39,13 +41,31 @@ func TestPathParsing(t *testing.T) {
 
 func TestVertexParsing(t *testing.T) {
 	rstStr := `{"id": 2251799813685425, "label": "Person", 
-		"properties": {"name": "Smith", "numInt":123, "numFloat": 384.23424, "yn":true, "nullVal": null}}::vertex`
+		"properties": {"name": "Smith", "numInt":123, "numIntBig":12345678901235555555555555555, "numFloat": 384.23424, 
+		"yn":true, "nullVal": null}}::vertex`
 
 	unmarshaler := NewAGUnmarshaler()
 	entity, _ := unmarshaler.unmarshal(rstStr)
 
 	// fmt.Println(entity)
 	assert.Equal(t, G_VERTEX, entity.GType())
+
+	v := entity.(*Vertex)
+	assert.Equal(t, "Smith", v.props["name"])
+	assert.True(t, (123 == v.props["numInt"]))
+	assert.Equal(t, 123, v.props["numInt"])
+
+	bi := new(big.Int)
+	bi, ok := bi.SetString("12345678901235555555555555555", 10)
+	if !ok {
+		fmt.Println("Cannot reach this line. ")
+	}
+	assert.Equal(t, bi, v.props["numIntBig"])
+
+	assert.True(t, (384.23424 == v.props["numFloat"]))
+	assert.Equal(t, float64(384.23424), v.props["numFloat"])
+	assert.Equal(t, true, v.props["yn"])
+	assert.Nil(t, v.props["nullVal"])
 }
 
 func TestNormalValueParsing(t *testing.T) {
@@ -74,13 +94,4 @@ func TestNormalValueParsing(t *testing.T) {
 	assert.Equal(t, G_FLOAT, fl.GType())
 	assert.Equal(t, G_BOOL, b.GType())
 
-	// assert.Equal(t, str1.(*SimpleEntity).Value(), str2.(*SimpleEntity).Value())
-
-	// fmt.Println(mapv)
-	// fmt.Println(arrv)
-	// // fmt.Println(str1)
-	// fmt.Println(str2)
-	// fmt.Println(intv)
-	// fmt.Println(fl)
-	// fmt.Println(b)
 }
