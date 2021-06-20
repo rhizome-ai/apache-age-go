@@ -4,14 +4,14 @@ Go driver support for [Apache AGE](https://age.apache.org/), graph extention for
 
 ### Go get & gomod
 * over Go 1.16
-* This module runs on [lib/pq](https://github.com/lib/pq) and [antlr4-python3](https://github.com/antlr/antlr4/tree/master/runtime/Go/antlr)
+* This module runs on golang standard api [database/sql](https://golang.org/pkg/database/sql/) and [antlr4-python3](https://github.com/antlr/antlr4/tree/master/runtime/Go/antlr)
 
 ```(shell)
 go get github.com/rhizome-ai/apache-age-go
 ```
 #### gomod
 ```(go)
-require  github.com/rhizome-ai/apache-age-go v0.0.1
+require  github.com/rhizome-ai/apache-age-go {version}
  
 ```
 Check [latest version](https://github.com/rhizome-ai/apache-age-go/releases)

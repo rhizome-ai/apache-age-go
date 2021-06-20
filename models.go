@@ -6,6 +6,7 @@ import (
 	"reflect"
 )
 
+// GTYPE representing entity types for AGE result data : Vertex, Edge, Path and SimpleEntity
 type GTYPE uint8
 
 const (
@@ -33,6 +34,7 @@ var _TpBool = reflect.TypeOf(bool(false))
 var _TpMap = reflect.TypeOf(map[string]interface{}{})
 var _TpArr = reflect.TypeOf([]interface{}{})
 
+// Entity object interface for parsed AGE result data : Vertex, Edge, Path and SimpleEntity
 type Entity interface {
 	GType() GTYPE
 }
