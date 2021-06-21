@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/big"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -17,13 +18,14 @@ const MinInt = -MaxInt - 1
 
 type AGUnmarshaler struct {
 	ageParser   *parser.AgeParser
-	visitor     *UnmarshalVisitor
+	visitor     parser.AgeVisitor
 	errListener *AGErrorListener
-	vcache      map[int64]*Vertex
+	vcache      map[int64]interface{}
 }
 
 func NewAGUnmarshaler() *AGUnmarshaler {
-	vcache := make(map[int64]*Vertex)
+	vcache := make(map[int64]interface{})
+
 	m := &AGUnmarshaler{ageParser: parser.NewAgeParser(nil),
 		visitor:     &UnmarshalVisitor{vcache: vcache},
 		errListener: NewAGErrorListener(),
@@ -40,6 +42,7 @@ func (p *AGUnmarshaler) unmarshal(text string) (Entity, error) {
 	stream := antlr.NewCommonTokenStream(lexer, 0)
 	p.ageParser.SetInputStream(stream)
 	tree := p.ageParser.Ageout()
+	fmt.Println("Visitor :: ", reflect.TypeOf(p.visitor))
 	rst := tree.Accept(p.visitor)
 
 	if len(p.errListener.errList) > 0 {
@@ -85,7 +88,7 @@ func (el *AGErrorListener) clearErrs() {
 
 type UnmarshalVisitor struct {
 	parser.AgeVisitor
-	vcache map[int64]*Vertex
+	vcache map[int64]interface{}
 }
 
 func (v *UnmarshalVisitor) Visit(tree antlr.ParseTree) interface{} { return nil }
@@ -114,6 +117,7 @@ func (v *UnmarshalVisitor) VisitVertex(ctx *parser.VertexContext) interface{} {
 
 	if !ok {
 		vertex = NewVertex(vid, props["label"].(string), props["properties"].(map[string]interface{}))
+		v.vcache[vid] = vertex
 	}
 
 	return vertex
