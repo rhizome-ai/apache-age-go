@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"math/big"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -42,7 +41,6 @@ func (p *AGUnmarshaler) unmarshal(text string) (Entity, error) {
 	stream := antlr.NewCommonTokenStream(lexer, 0)
 	p.ageParser.SetInputStream(stream)
 	tree := p.ageParser.Ageout()
-	fmt.Println("Visitor :: ", reflect.TypeOf(p.visitor))
 	rst := tree.Accept(p.visitor)
 
 	if len(p.errListener.errList) > 0 {

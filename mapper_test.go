@@ -9,7 +9,11 @@ import (
 )
 
 type VPerson struct {
-	name string
+	Name string
+}
+
+type EWorkWith struct {
+	Weight int
 }
 
 func TestPathMapping(t *testing.T) {
@@ -27,6 +31,7 @@ func TestPathMapping(t *testing.T) {
 
 	mapper := NewAGMapper(nil)
 	mapper.PutType("Person", reflect.TypeOf(VPerson{}))
+	mapper.PutType("workWith", reflect.TypeOf(EWorkWith{}))
 
 	entity1, _ := mapper.unmarshal(rstStr1)
 	entity2, _ := mapper.unmarshal(rstStr2)
@@ -37,11 +42,14 @@ func TestPathMapping(t *testing.T) {
 	fmt.Println(" **** ", entity3)
 
 	assert.Equal(t, entity1.GType(), entity2.GType(), "Type Check")
-	p1 := entity1.(*Path)
-	p2 := entity2.(*Path)
-	p3 := entity3.(*Path)
+	p1 := entity1.(*MapPath)
+	p2 := entity2.(*MapPath)
+	p3 := entity3.(*MapPath)
 
-	assert.Equal(t, p1.end.props["name"], p2.start.props["name"])
-	assert.Equal(t, p2.start.props["name"], p3.start.props["name"])
+	assert.Equal(t, p1.end.(VPerson).Name, p2.start.(VPerson).Name)
+	assert.Equal(t, p2.start.(VPerson).Name, p3.start.(VPerson).Name)
 
+	assert.Equal(t, p1.rel.(EWorkWith).Weight, 3)
+	assert.Equal(t, p2.rel.(EWorkWith).Weight, 3)
+	assert.Equal(t, p3.rel.(EWorkWith).Weight, 5)
 }

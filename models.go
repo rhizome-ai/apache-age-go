@@ -14,6 +14,7 @@ const (
 	G_VERTEX
 	G_EDEGE
 	G_PATH
+	G_MAP_PATH
 	G_STR
 	G_INT
 	G_INTBIG
@@ -26,6 +27,7 @@ const (
 var _TpV = reflect.TypeOf(&Vertex{})
 var _TpE = reflect.TypeOf(&Edge{})
 var _TpP = reflect.TypeOf(&Path{})
+var _TpMP = reflect.TypeOf(&MapPath{})
 var _TpStr = reflect.TypeOf(string(""))
 var _TpInt = reflect.TypeOf(int(0))
 var _TpIntBig = reflect.TypeOf(big.NewInt(0))
@@ -206,5 +208,37 @@ func (p *Path) End() *Vertex {
 
 func (p *Path) String() string {
 	return fmt.Sprintf("P[%v, %v, %v]",
+		p.start, p.rel, p.end)
+}
+
+type MapPath struct {
+	Entity
+	start interface{}
+	rel   interface{}
+	end   interface{}
+}
+
+func NewMapPath(start interface{}, rel interface{}, end interface{}) *MapPath {
+	return &MapPath{start: start, rel: rel, end: end}
+}
+
+func (e *MapPath) GType() GTYPE {
+	return G_MAP_PATH
+}
+
+func (p *MapPath) Start() interface{} {
+	return p.start
+}
+
+func (p *MapPath) Rel() interface{} {
+	return p.rel
+}
+
+func (p *MapPath) End() interface{} {
+	return p.end
+}
+
+func (p *MapPath) String() string {
+	return fmt.Sprintf("MP[%v, %v, %v]",
 		p.start, p.rel, p.end)
 }

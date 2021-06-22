@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 	"github.com/rhizome-ai/apache-age-go/parser"
@@ -49,7 +49,6 @@ func (v *MapperVisitor) VisitAgeout(ctx *parser.AgeoutContext) interface{} {
 }
 
 func (v *MapperVisitor) VisitChildren(node antlr.RuleNode) interface{} {
-	fmt.Println("MapperVisitor VisitChildren ")
 	var rtn interface{}
 	for _, c := range node.GetChildren() {
 		pt := c.(antlr.ParseTree)
@@ -58,38 +57,88 @@ func (v *MapperVisitor) VisitChildren(node antlr.RuleNode) interface{} {
 	return rtn
 }
 
+func (v *MapperVisitor) VisitPath(ctx *parser.PathContext) interface{} {
+	vctxArr := ctx.AllVertex()
+
+	start := vctxArr[0].Accept(v)
+	rel := ctx.Edge().Accept(v)
+	end := vctxArr[1].Accept(v)
+
+	// fmt.Println("VisitPath:", reflect.TypeOf(start), reflect.TypeOf(rel), reflect.TypeOf(end))
+	path := NewMapPath(start, rel, end)
+	return path
+}
+
 func (v *MapperVisitor) VisitVertex(ctx *parser.VertexContext) interface{} {
-	fmt.Println("MapperVisitor VisitVertex ")
 	propCtx := ctx.Properties()
 	props := propCtx.Accept(v).(map[string]interface{})
-	// fmt.Println(" * VisitVertex:", props)
 	vid := int64(props["id"].(int))
 	vertex, ok := v.vcache[vid]
 
+	var err error
 	if !ok {
-		vertex, err := v.mapVertex(vid, props["label"].(string), props["properties"].(map[string]interface{}))
+		vertex, err = v.mapVertex(vid, props["label"].(string), props["properties"].(map[string]interface{}))
 		if err != nil {
 			panic(err)
 		}
 		v.vcache[vid] = vertex
 	}
+
+	// fmt.Println(" * VisitVertex:", vertex)
 	return vertex
+}
+
+// Visit a parse tree produced by AgeParser#edge.
+func (v *MapperVisitor) VisitEdge(ctx *parser.EdgeContext) interface{} {
+	propCtx := ctx.Properties()
+	props := propCtx.Accept(v).(map[string]interface{})
+	vid := int64(props["id"].(int))
+	edge, ok := v.vcache[vid]
+
+	var err error
+	if !ok {
+		edge, err = v.mapEdge(vid, props["label"].(string), int64(props["start_id"].(int)), int64(props["end_id"].(int)),
+			props["properties"].(map[string]interface{}))
+		if err != nil {
+			panic(err)
+		}
+		v.vcache[vid] = edge
+	}
+
+	return edge
 }
 
 func (v *MapperVisitor) mapVertex(vid int64, label string, properties map[string]interface{}) (interface{}, error) {
 	tp, ok := v.typeMap[label]
 
-	fmt.Println("TYPE MAP : ", label, tp)
 	if !ok {
 		return NewVertex(vid, label, properties), nil
 	}
 
-	value := reflect.New(tp)
+	return mapStruct(tp, properties)
+}
 
-	for k, v := range properties {
-		field := value.FieldByName(k)
-		field.Set(reflect.ValueOf(v))
+func (v *MapperVisitor) mapEdge(vid int64, label string, start int64, end int64, properties map[string]interface{}) (interface{}, error) {
+	tp, ok := v.typeMap[label]
+
+	if !ok {
+		return NewEdge(vid, label, start, end, properties), nil
 	}
 
-	return value.Elem().Interface(), nil
+	return mapStruct(tp, properties)
+}
+
+func mapStruct(tp reflect.Type, properties map[string]interface{}) (interface{}, error) {
+	value := reflect.New(tp).Elem()
+
+	for k, v := range properties {
+		k = strings.Title(k)
+		f, ok := tp.FieldByName(k)
+		if ok {
+			field := value.FieldByIndex(f.Index)
+			field.Set(reflect.ValueOf(v))
+		}
+	}
+
+	return value.Interface(), nil
 }
