@@ -136,14 +136,28 @@ func (v *UnmarshalVisitor) VisitEdge(ctx *parser.EdgeContext) interface{} {
 
 // Visit a parse tree produced by AgeParser#path.
 func (v *UnmarshalVisitor) VisitPath(ctx *parser.PathContext) interface{} {
-	vctxArr := ctx.AllVertex()
+	entities := []Entity{}
 
-	start := vctxArr[0].Accept(v)
-	rel := ctx.Edge().Accept(v)
-	end := vctxArr[1].Accept(v)
+	for _, child := range ctx.GetChildren() {
+		switch child.(type) {
+		case *parser.VertexContext:
+			v := child.(*parser.VertexContext).Accept(v)
+			// fmt.Println(v)
+			entities = append(entities, v.(Entity))
+		case *parser.EdgeContext:
+			e := child.(*parser.EdgeContext).Accept(v)
+			// fmt.Println(e)
+			entities = append(entities, e.(Entity))
+		default:
+		}
+	}
+	// vctxArr := ctx.AllVertex()
+	// start := vctxArr[0].Accept(v)
+	// rel := ctx.Edge().Accept(v)
+	// end := vctxArr[1].Accept(v)
 
 	// fmt.Println("VisitPath:", reflect.TypeOf(start), reflect.TypeOf(rel), reflect.TypeOf(rel))
-	path := NewPath(start.(*Vertex), rel.(*Edge), end.(*Vertex))
+	path := NewPath(entities[0].(*Vertex), entities[1].(*Edge), entities[2].(*Vertex))
 	return path
 }
 

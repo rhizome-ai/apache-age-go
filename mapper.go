@@ -58,14 +58,28 @@ func (v *MapperVisitor) VisitChildren(node antlr.RuleNode) interface{} {
 }
 
 func (v *MapperVisitor) VisitPath(ctx *parser.PathContext) interface{} {
-	vctxArr := ctx.AllVertex()
+	entities := []interface{}{}
 
-	start := vctxArr[0].Accept(v)
-	rel := ctx.Edge().Accept(v)
-	end := vctxArr[1].Accept(v)
+	for _, child := range ctx.GetChildren() {
+		switch child.(type) {
+		case *parser.VertexContext:
+			v := child.(*parser.VertexContext).Accept(v)
+			// fmt.Println(v)
+			entities = append(entities, v)
+		case *parser.EdgeContext:
+			e := child.(*parser.EdgeContext).Accept(v)
+			// fmt.Println(e)
+			entities = append(entities, e)
+		default:
+		}
+	}
+	// vctxArr := ctx.AllVertex()
+	// start := vctxArr[0].Accept(v)
+	// rel := ctx.Edge().Accept(v)
+	// end := vctxArr[1].Accept(v)
 
-	// fmt.Println("VisitPath:", reflect.TypeOf(start), reflect.TypeOf(rel), reflect.TypeOf(end))
-	path := NewMapPath(start, rel, end)
+	// fmt.Println("VisitPath:", reflect.TypeOf(start), reflect.TypeOf(rel), reflect.TypeOf(rel))
+	path := NewMapPath(entities[0], entities[1], entities[2])
 	return path
 }
 

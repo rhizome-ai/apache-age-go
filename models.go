@@ -113,35 +113,35 @@ func (e *SimpleEntity) AsArr() []interface{} {
 	return e.value.([]interface{})
 }
 
-type Node struct {
+type LabeledEntity struct {
 	Entity
 	id    int64
 	label string
 	props map[string]interface{}
 }
 
-func newNode(id int64, label string, props map[string]interface{}) *Node {
-	return &Node{id: id, label: label, props: props}
+func newLabeledEntity(id int64, label string, props map[string]interface{}) *LabeledEntity {
+	return &LabeledEntity{id: id, label: label, props: props}
 }
 
-func (n *Node) Id() int64 {
+func (n *LabeledEntity) Id() int64 {
 	return n.id
 }
 
-func (n *Node) Label() string {
+func (n *LabeledEntity) Label() string {
 	return n.label
 }
 
-func (n *Node) Prop(key string) interface{} {
+func (n *LabeledEntity) Prop(key string) interface{} {
 	return n.props[key]
 }
 
 type Vertex struct {
-	*Node
+	*LabeledEntity
 }
 
 func NewVertex(id int64, label string, props map[string]interface{}) *Vertex {
-	return &Vertex{newNode(id, label, props)}
+	return &Vertex{newLabeledEntity(id, label, props)}
 }
 
 func (v *Vertex) GType() GTYPE {
@@ -153,13 +153,13 @@ func (v *Vertex) String() string {
 }
 
 type Edge struct {
-	*Node
+	*LabeledEntity
 	start_id int64
 	end_id   int64
 }
 
 func NewEdge(id int64, label string, start int64, end int64, props map[string]interface{}) *Edge {
-	return &Edge{Node: newNode(id, label, props), start_id: start, end_id: end}
+	return &Edge{LabeledEntity: newLabeledEntity(id, label, props), start_id: start, end_id: end}
 }
 
 func (e *Edge) GType() GTYPE {
