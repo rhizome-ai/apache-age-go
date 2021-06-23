@@ -9,7 +9,9 @@ import (
 )
 
 type VPerson struct {
-	Name string
+	Name   string
+	Age    int
+	Weight float64
 }
 
 type EWorkWith struct {
@@ -46,10 +48,10 @@ func TestPathMapping(t *testing.T) {
 	p2 := entity2.(*MapPath)
 	p3 := entity3.(*MapPath)
 
-	assert.Equal(t, p1.end.(VPerson).Name, p2.start.(VPerson).Name)
-	assert.Equal(t, p2.start.(VPerson).Name, p3.start.(VPerson).Name)
+	assert.Equal(t, p1.Get(2).(VPerson).Name, p2.Get(0).(VPerson).Name)
+	assert.Equal(t, p2.Get(0).(VPerson).Name, p3.Get(0).(VPerson).Name)
 
-	assert.Equal(t, p1.rel.(EWorkWith).Weight, 3)
-	assert.Equal(t, p2.rel.(EWorkWith).Weight, 3)
-	assert.Equal(t, p3.rel.(EWorkWith).Weight, 5)
+	assert.Equal(t, p1.Get(1).(EWorkWith).Weight, 3)
+	assert.Equal(t, p2.Get(1).(EWorkWith).Weight, 3)
+	assert.Equal(t, p3.Get(1).(EWorkWith).Weight, 5)
 }

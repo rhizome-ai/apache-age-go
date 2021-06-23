@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"math/big"
 	"reflect"
@@ -12,7 +13,7 @@ type GTYPE uint8
 const (
 	G_OTHER GTYPE = 1 + iota
 	G_VERTEX
-	G_EDEGE
+	G_EDGE
 	G_PATH
 	G_MAP_PATH
 	G_STR
@@ -39,6 +40,7 @@ var _TpArr = reflect.TypeOf([]interface{}{})
 // Entity object interface for parsed AGE result data : Vertex, Edge, Path and SimpleEntity
 type Entity interface {
 	GType() GTYPE
+	String() string
 }
 
 func IsEntity(v interface{}) bool {
@@ -163,7 +165,7 @@ func NewEdge(id int64, label string, start int64, end int64, props map[string]in
 }
 
 func (e *Edge) GType() GTYPE {
-	return G_EDEGE
+	return G_EDGE
 }
 
 func (e *Edge) StartId() int64 {
@@ -181,64 +183,87 @@ func (e *Edge) String() string {
 
 type Path struct {
 	Entity
-	start *Vertex
-	rel   *Edge
-	end   *Vertex
+	entities []Entity
 }
 
-func NewPath(start *Vertex, rel *Edge, end *Vertex) *Path {
-	return &Path{start: start, rel: rel, end: end}
+func NewPath(entities []Entity) *Path {
+	return &Path{entities: entities}
 }
 
 func (e *Path) GType() GTYPE {
 	return G_PATH
 }
 
-func (p *Path) Start() *Vertex {
-	return p.start
+func (e *Path) Size() int {
+	return len(e.entities)
 }
 
-func (p *Path) Rel() *Edge {
-	return p.rel
+func (e *Path) Get(index int) Entity {
+	if index < 0 && index >= len(e.entities) {
+		panic(fmt.Errorf("Entity index[%d] is out of range (%d) ", index, len(e.entities)))
+	}
+	return e.entities[index]
 }
 
-func (p *Path) End() *Vertex {
-	return p.end
+func (e *Path) GetAsVertex(index int) *Vertex {
+	v := e.Get(index)
+
+	if v.GType() != G_VERTEX {
+		panic(fmt.Errorf("Entity[%d] is not Vertex", index))
+	}
+	return v.(*Vertex)
+}
+
+func (e *Path) GetAsEdge(index int) *Edge {
+	v := e.Get(index)
+	if v.GType() != G_EDGE {
+		panic(fmt.Errorf("Entity[%d] is not Edge", index))
+	}
+	return v.(*Edge)
 }
 
 func (p *Path) String() string {
-	return fmt.Sprintf("P[%v, %v, %v]",
-		p.start, p.rel, p.end)
+	var buf bytes.Buffer
+	buf.WriteString("P[")
+	for _, e := range p.entities {
+		buf.WriteString(e.String())
+		buf.WriteString(",")
+	}
+	buf.WriteString("]")
+	return buf.String()
 }
 
 type MapPath struct {
 	Entity
-	start interface{}
-	rel   interface{}
-	end   interface{}
+	entities []interface{}
 }
 
-func NewMapPath(start interface{}, rel interface{}, end interface{}) *MapPath {
-	return &MapPath{start: start, rel: rel, end: end}
+func NewMapPath(entities []interface{}) *MapPath {
+	return &MapPath{entities: entities}
 }
 
 func (e *MapPath) GType() GTYPE {
 	return G_MAP_PATH
 }
 
-func (p *MapPath) Start() interface{} {
-	return p.start
+func (e *MapPath) Size() int {
+	return len(e.entities)
 }
 
-func (p *MapPath) Rel() interface{} {
-	return p.rel
-}
-
-func (p *MapPath) End() interface{} {
-	return p.end
+func (e *MapPath) Get(index int) interface{} {
+	if index < 0 && index >= len(e.entities) {
+		panic(fmt.Errorf("Entity index[%d] is out of range (%d) ", index, len(e.entities)))
+	}
+	return e.entities[index]
 }
 
 func (p *MapPath) String() string {
-	return fmt.Sprintf("MP[%v, %v, %v]",
-		p.start, p.rel, p.end)
+	var buf bytes.Buffer
+	buf.WriteString("P[")
+	for _, e := range p.entities {
+		buf.WriteString(fmt.Sprintf("%v", e))
+		buf.WriteString(",")
+	}
+	buf.WriteString("]")
+	return buf.String()
 }

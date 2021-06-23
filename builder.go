@@ -151,13 +151,8 @@ func (v *UnmarshalVisitor) VisitPath(ctx *parser.PathContext) interface{} {
 		default:
 		}
 	}
-	// vctxArr := ctx.AllVertex()
-	// start := vctxArr[0].Accept(v)
-	// rel := ctx.Edge().Accept(v)
-	// end := vctxArr[1].Accept(v)
 
-	// fmt.Println("VisitPath:", reflect.TypeOf(start), reflect.TypeOf(rel), reflect.TypeOf(rel))
-	path := NewPath(entities[0].(*Vertex), entities[1].(*Edge), entities[2].(*Vertex))
+	path := NewPath(entities)
 	return path
 }
 

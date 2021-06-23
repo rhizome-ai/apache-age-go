@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -79,7 +80,7 @@ func (v *MapperVisitor) VisitPath(ctx *parser.PathContext) interface{} {
 	// end := vctxArr[1].Accept(v)
 
 	// fmt.Println("VisitPath:", reflect.TypeOf(start), reflect.TypeOf(rel), reflect.TypeOf(rel))
-	path := NewMapPath(entities[0], entities[1], entities[2])
+	path := NewMapPath(entities)
 	return path
 }
 
@@ -150,7 +151,12 @@ func mapStruct(tp reflect.Type, properties map[string]interface{}) (interface{},
 		f, ok := tp.FieldByName(k)
 		if ok {
 			field := value.FieldByIndex(f.Index)
-			field.Set(reflect.ValueOf(v))
+			val := reflect.ValueOf(v)
+			if field.Type().ConvertibleTo(val.Type()) {
+				field.Set(val)
+			} else {
+				return nil, fmt.Errorf("Property[%s] value[%v] type is not convertable to %v", k, v, field.Type())
+			}
 		}
 	}
 
