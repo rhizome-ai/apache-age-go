@@ -159,6 +159,11 @@ func (n *LabeledEntity) Prop(key string) interface{} {
 	return n.props[key]
 }
 
+// return properties
+func (n *LabeledEntity) Props() map[string]interface{} {
+	return n.props
+}
+
 type Vertex struct {
 	*LabeledEntity
 }

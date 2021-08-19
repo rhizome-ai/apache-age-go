@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"reflect"
@@ -42,8 +43,39 @@ func GetReady(db *sql.DB, graphName string) (bool, error) {
 	return true, nil
 }
 
-/** CREATE , DROP .... */
-func ExecCypher(tx *sql.Tx, graphName string, cypher string, args ...interface{}) error {
+// ExecCypher
+// CREATE , DROP ....
+// MATCH .... RETURN ....
+// CREATE , DROP .... RETURN ...
+func ExecCypher(tx *sql.Tx, graphName string, columnCount int, cypher string, args ...interface{}) (*CypherCursor, error) {
+	var buf bytes.Buffer
+
+	buf.WriteString("SELECT * from cypher('")
+	buf.WriteString(graphName)
+	buf.WriteString("', $$ ")
+	buf.WriteString(cypher)
+	buf.WriteString(" $$) as (")
+	buf.WriteString("v0 agtype")
+	for i := 1; i < columnCount; i++ {
+		buf.WriteString(fmt.Sprintf(", v%d agtype", i))
+	}
+	buf.WriteString(")")
+
+	stmt := buf.String()
+
+	rows, err := tx.Query(stmt, args...)
+
+	if err != nil {
+		fmt.Println(stmt)
+		return nil, err
+	} else {
+		return NewCypherCursor(rows), nil
+	}
+}
+
+// ExecCypher execute without return
+// CREATE , DROP .... */
+func ExecCypher2(tx *sql.Tx, graphName string, cypher string, args ...interface{}) error {
 	cypherStmt := fmt.Sprintf(cypher, args...)
 	stmt := fmt.Sprintf("SELECT * from cypher('%s', $$ %s $$) as (v agtype);",
 		graphName, cypherStmt)
@@ -52,7 +84,9 @@ func ExecCypher(tx *sql.Tx, graphName string, cypher string, args ...interface{}
 	return err
 }
 
-/** MATCH .... RETURN .... */
+// QueryCypher execute with return
+// MATCH .... RETURN ....
+// CREATE , DROP .... RETURN ...
 func QueryCypher(tx *sql.Tx, graphName string, cypher string, args ...interface{}) (*CypherCursor, error) {
 	cypherStmt := fmt.Sprintf(cypher, args...)
 	stmt := fmt.Sprintf("SELECT * from cypher('%s', $$ %s $$) as (v agtype);",
@@ -100,11 +134,6 @@ func ConnectAge(graphName string, dsn string) (*Age, error) {
 		return nil, err
 	}
 	age := &Age{db: db, graphName: graphName}
-	// _, err = age.GetReady()
-	// if err != nil {
-	// 	age.Close()
-	// 	return nil, err
-	// }
 	_, err = age.GetReady()
 
 	if err != nil {
@@ -176,16 +205,46 @@ func (a *Age) Begin() (*AgeTx, error) {
 func (t *AgeTx) Commit() error {
 	return t.tx.Commit()
 }
+
 func (t *AgeTx) Rollback() error {
 	return t.tx.Rollback()
 }
 
-func (a *AgeTx) Exec(stmt string, args ...interface{}) (sql.Result, error) {
-	return a.tx.Exec(stmt, args...)
+// func buildCypher(graphName string, cypherStmt string, columns )
+
+// def buildCypher(graphName:str, cypherStmt:str, columns:list) ->str:
+//     if graphName == None:
+//         raise _EXCEPTION_GraphNotSet
+
+//     columnExp=[]
+//     if columns != None and len(columns) > 0:
+//         for col in columns:
+//             if col.strip() == '':
+//                 continue
+//             elif WHITESPACE.search(col) != None:
+//                 columnExp.append(col)
+//             else:
+//                 columnExp.append(col + " agtype")
+//     else:
+//         columnExp.append('v agtype')
+
+//     stmtArr = []
+//     stmtArr.append("SELECT * from cypher('")
+//     stmtArr.append(graphName)
+//     stmtArr.append("', $$ ")
+//     stmtArr.append(cypherStmt)
+//     stmtArr.append(" $$) as (")
+//     stmtArr.append(','.join(columnExp))
+//     stmtArr.append(");")
+//     return "".join(stmtArr)
+
+/** CREATE , DROP .... */
+func (a *AgeTx) ExecCypher(cypher string, columnCount int, args ...interface{}) (*CypherCursor, error) {
+	return ExecCypher(a.tx, a.age.graphName, columnCount, cypher, args...)
 }
 
 /** CREATE , DROP .... */
-func (a *AgeTx) ExecCypher(cypher string, args ...interface{}) error {
+func (a *AgeTx) ExecCypher2(cypher string, args ...interface{}) error {
 	cypherStmt := fmt.Sprintf(cypher, args...)
 	stmt := fmt.Sprintf("SELECT * from cypher('%s', $$ %s $$) as (v agtype);",
 		a.age.graphName, cypherStmt)
@@ -243,6 +302,7 @@ func (c *CypherCursor) GetRow() (Entity, error) {
 	if err != nil {
 		return nil, fmt.Errorf("CypherCursor.GetRow:: %s", err)
 	}
+
 	return c.unmarshaler.unmarshal(gstr)
 }
 
