@@ -29,7 +29,7 @@ func TestAdditional(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = ExecCypher(cursor, graphName, 0, "CREATE (n:Person {name: '%s', weight:67.0})", "Joe")
+	_, err = ExecCypher(cursor, graphName, 0, "CREATE (n:Person {name: '%s', weight:%f})", "Joe", 67.3)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,7 +39,7 @@ func TestAdditional(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = ExecCypher(cursor, graphName, 0, "CREATE (n:Person {name: '%s', weight:59})", "Andy")
+	_, err = ExecCypher(cursor, graphName, 0, "CREATE (n:Person {name: '%s', weight:%d})", "Andy", 59)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -97,7 +97,12 @@ func TestAdditional(t *testing.T) {
 		}
 
 		path := entities[0].(*Path)
-		fmt.Println(path.GetAsVertex(0), path.GetAsEdge(1), path.GetAsVertex(2))
+
+		vertexStart := path.GetAsVertex(0)
+		edge := path.GetAsEdge(1)
+		vertexEnd := path.GetAsVertex(2)
+
+		fmt.Println(vertexStart, edge, vertexEnd)
 	}
 
 	_, err = ExecCypher(cursor, graphName, 0, "MATCH (n:Person) DETACH DELETE n RETURN *")
