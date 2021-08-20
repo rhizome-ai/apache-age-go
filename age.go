@@ -234,62 +234,14 @@ func (t *AgeTx) Rollback() error {
 	return t.tx.Rollback()
 }
 
-// func buildCypher(graphName string, cypherStmt string, columns )
-
-// def buildCypher(graphName:str, cypherStmt:str, columns:list) ->str:
-//     if graphName == None:
-//         raise _EXCEPTION_GraphNotSet
-
-//     columnExp=[]
-//     if columns != None and len(columns) > 0:
-//         for col in columns:
-//             if col.strip() == '':
-//                 continue
-//             elif WHITESPACE.search(col) != None:
-//                 columnExp.append(col)
-//             else:
-//                 columnExp.append(col + " agtype")
-//     else:
-//         columnExp.append('v agtype')
-
-//     stmtArr = []
-//     stmtArr.append("SELECT * from cypher('")
-//     stmtArr.append(graphName)
-//     stmtArr.append("', $$ ")
-//     stmtArr.append(cypherStmt)
-//     stmtArr.append(" $$) as (")
-//     stmtArr.append(','.join(columnExp))
-//     stmtArr.append(");")
-//     return "".join(stmtArr)
-
 /** CREATE , DROP .... */
 func (a *AgeTx) ExecCypher(columnCount int, cypher string, args ...interface{}) (*CypherCursor, error) {
 	return ExecCypher(a.tx, a.age.graphName, columnCount, cypher, args...)
 }
 
-// /** CREATE , DROP .... */
-// func (a *AgeTx) ExecCypher2(cypher string, args ...interface{}) error {
-// 	cypherStmt := fmt.Sprintf(cypher, args...)
-// 	stmt := fmt.Sprintf("SELECT * from cypher('%s', $$ %s $$) as (v agtype);",
-// 		a.age.graphName, cypherStmt)
-
-// 	_, err := a.tx.Exec(stmt)
-// 	return err
-// }
-
-// /** MATCH .... RETURN .... */
-// func (a *AgeTx) QueryCypher(cypher string, args ...interface{}) (Cursor, error) {
-// 	cypherStmt := fmt.Sprintf(cypher, args...)
-// 	stmt := fmt.Sprintf("SELECT * from cypher('%s', $$ %s $$) as (v agtype);",
-// 		a.age.graphName, cypherStmt)
-
-// 	rows, err := a.tx.Query(stmt)
-// 	if err != nil {
-// 		return nil, err
-// 	} else {
-// 		return NewCypherCursor(1, rows), nil
-// 	}
-// }
+func (a *AgeTx) ExecCypherMap(columnCount int, cypher string, args ...interface{}) (*CypherMapCursor, error) {
+	return ExecCypherMap(a.tx, a.age.graphName, columnCount, cypher, args...)
+}
 
 type CypherCursor struct {
 	Cursor
@@ -301,22 +253,6 @@ type CypherCursor struct {
 func NewCypherCursor(columnCount int, rows *sql.Rows) Cursor {
 	return &CypherCursor{columnCount: columnCount, rows: rows, unmarshaler: NewAGUnmarshaler()}
 }
-
-// func (c *CypherCursor) All() ([]Entity, error) {
-// 	defer c.rows.Close()
-
-// 	ens := []Entity{}
-
-// 	for c.rows.Next() {
-// 		entity, err := c.GetRow()
-// 		if err != nil {
-// 			return ens, err
-// 		}
-// 		ens = append(ens, entity)
-// 	}
-
-// 	return ens, nil
-// }
 
 func (c *CypherCursor) Next() bool {
 	return c.rows.Next()

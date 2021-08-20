@@ -52,13 +52,17 @@ func TestAdditional(t *testing.T) {
 
 	cypherCursor, err := ExecCypher(cursor, graphName, 1, "MATCH (n:Person) RETURN n")
 
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	for cypherCursor.Next() {
 		entities, err := cypherCursor.GetRow()
 		if err != nil {
 			t.Fatal(err)
 		}
 		vertex := entities[0].(*Vertex)
-		fmt.Println(vertex.id, vertex.label, vertex.props)
+		fmt.Println(vertex.Id(), vertex.Label(), vertex.Props())
 	}
 
 	_, err = ExecCypher(cursor, graphName, 0, "MATCH (a:Person), (b:Person) WHERE a.name='%s' AND b.name='%s' CREATE (a)-[r:workWith {weight: %d}]->(b)",
@@ -150,7 +154,7 @@ func TestQuery(t *testing.T) {
 		}
 		count++
 		vertex := entities[0].(*Vertex)
-		fmt.Println(count, "]", vertex.id, vertex.label, vertex.props)
+		fmt.Println(count, "]", vertex.Id(), vertex.Label(), vertex.Props())
 	}
 
 	fmt.Println("Vertex Count:", count)
