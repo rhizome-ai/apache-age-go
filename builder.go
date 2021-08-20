@@ -16,7 +16,12 @@ const MaxInt = int(MaxUint >> 1)
 const MinUint = 0
 const MinInt = -MaxInt - 1
 
+type Unmarshaller interface {
+	unmarshal(text string) (Entity, error)
+}
+
 type AGUnmarshaler struct {
+	Unmarshaller
 	ageParser   *parser.AgeParser
 	visitor     parser.AgeVisitor
 	errListener *AGErrorListener
