@@ -51,10 +51,10 @@ go test -v .
 ```
 ### Samples
 **Usage 1: using database/sql API and Cypher execution function 'ExecCypher'**
-> * Sample : [samples/sql_api_sample.go]
+> * Sample : [samples/sql_api_sample.go](samples/sql_api_sample.go)
 
 **Usage 2: using Age Wrapper**
-> * Sample : [samples/age_wrapper_sample.go]
+> * Sample : [samples/age_wrapper_sample.go](samples/age_wrapper_sample.go)
 
 
 ### License
