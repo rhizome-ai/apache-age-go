@@ -56,6 +56,8 @@ go test -v .
 **Usage 2: using Age Wrapper**
 > * Sample : [samples/age_wrapper_sample.go](samples/age_wrapper_sample.go)
 
+**Run Samples**
+> Sample : [samples/main.go](samples/main.go)
 
 ### License
 Apache-2.0 License
