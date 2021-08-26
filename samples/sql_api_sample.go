@@ -104,6 +104,25 @@ func doWithSqlAPI(dsn string, graphName string) {
 		fmt.Println(vertexStart, edge, vertexEnd)
 	}
 
+	// Query with return many columns
+	cursor, err := age.ExecCypher(tx, graphName, 3, "MATCH (a:Person)-[l:workWith]-(b:Person) RETURN a, l, b")
+	if err != nil {
+		panic(err)
+	}
+
+	count := 0
+	for cursor.Next() {
+		row, err := cursor.GetRow()
+		if err != nil {
+			panic(err)
+		}
+		count++
+		v1 := row[0].(*age.Vertex)
+		edge := row[1].(*age.Edge)
+		v2 := row[2].(*age.Vertex)
+		fmt.Println("ROW ", count, ">>", "\n\t", v1, "\n\t", edge, "\n\t", v2)
+	}
+
 	// Delete Vertices
 	_, err = age.ExecCypher(tx, graphName, 0, "MATCH (n:Person) DETACH DELETE n RETURN *")
 	if err != nil {

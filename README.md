@@ -49,122 +49,13 @@ cd apache-age-go
 go test -v .
 
 ```
+### Samples
+**Usage 1: using database/sql API and Cypher execution function 'ExecCypher'**
+> * Sample : [samples/sql_api_sample.go]
 
-### Usage 1: using static function 'ExecCypher'
-```
-import (
-    "fmt"
-    "database/sql"
-	age "github.com/rhizome-ai/apache-age-go"
-)
+**Usage 2: using Age Wrapper**
+> * Sample : [samples/age_wrapper_sample.go]
 
-func main() {
-    var dsn string = "host={host} port={port} dbname={dbname} user={username} password={password} sslmode=disable"
-    var graphName string = "{graph_path}"
 
-    // Connect to PostgreSQL
-	db, err := sql.Open("postgres", dsn)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-    // Confirm graph_path created
-	_, err = age.GetReady(db, graphName)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-    // Tx begin for execute create vertex
-	cursor, err := db.Begin()
-	if err != nil {
-		fmt.Println(err)
-        return
-	}
-
-    // Create vertices with Cypher
-	_, err = ExecCypher(cursor, graphName, 0, "CREATE (n:Person {name: '%s', weight:%f})", "Joe", 67.3)
-	if err != nil {
-		fmt.Println(err)
-        return
-	}
-
-	_, err = ExecCypher(cursor, graphName, 0, "CREATE (n:Person {name: '%s', weight:77.3, roles:['Dev','marketing']})", "Jack")
-	if err != nil {
-		fmt.Println(err)
-        return
-	}
-
-	_, err = ExecCypher(cursor, graphName, 0, "CREATE (n:Person {name: '%s', weight:%d})", "Andy", 59)
-	if err != nil {
-		fmt.Println(err)
-        return
-	}
-    
-    // Commit Tx
-	cursor.Commit()
-
-    // Tx begin for queries
-	cursor, err = db.Begin()
-
-    // Query cypher
-	cypherCursor, err := age.ExecCypher(cursor, graphName, 1, "MATCH (n:Person) RETURN n")
-
-    // Unmarsal result data to Vertex row by row
-	for cypherCursor.Next() {
-		entities, err := cypherCursor.GetRow()
-		if err != nil {
-			t.Fatal(err)
-		}
-		vertex := entities[0].(*Vertex)
-		fmt.Println(vertex.Id(), vertex.Label(), vertex.Props())
-	}
-
-    // Create Paths (Edges)
-	_, err = age.ExecCypher(cursor, graphName, 0, "MATCH (a:Person), (b:Person) WHERE a.name='%s' AND b.name='%s' CREATE (a)-[r:workWith {weight: %d}]->(b)", "Jack", "Joe", 3)
-	if err != nil {
-		fmt.Println(err)
-        return
-	}
-
-	_, err = age.ExecCypher(cursor, graphName, 0, "MATCH (a:Person {name: '%s'}), (b:Person {name: '%s'}) CREATE (a)-[r:workWith {weight: %d}]->(b)", "Joe", "Andy", 7)
-	if err != nil {
-		fmt.Println(err)
-        return
-	}
-
-	cursor.Commit()
-
-	cursor, err = db.Begin()
-
-    // Query Paths with Cypher
-	cypherCursor, err = age.ExecCypher(cursor, graphName, 1, "MATCH p=()-[:workWith]-() RETURN p")
-	if err != nil {
-		fmt.Println(err)
-        return
-	}
-
-	for cypherCursor.Next() {
-		entities, err := cypherCursor.GetRow()
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		path := entities[0].(*Path)
-		vertexStart := path.GetAsVertex(0)
-		edge := path.GetAsEdge(1)
-		vertexEnd := path.GetAsVertex(2)
-
-		fmt.Println(vertexStart, edge, vertexEnd)
-	}
-
-    // Delete Vertices 
-	_, err = age.ExecCypher(cursor, graphName, "MATCH (n:Person) DETACH DELETE n RETURN *")
-	if err != nil {
-		fmt.Println(err)
-        return
-	}
-	cursor.Commit()
-}
-```
 ### License
 Apache-2.0 License

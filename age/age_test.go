@@ -112,7 +112,7 @@ func TestAdditional(t *testing.T) {
 	cursor.Commit()
 }
 
-func TestQuery(t *testing.T) {
+func TestAgeWrapper(t *testing.T) {
 	ag, err := ConnectAge(graphName, dsn)
 
 	if err != nil {
