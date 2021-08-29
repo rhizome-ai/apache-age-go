@@ -7,6 +7,9 @@ import (
 	"reflect"
 )
 
+// GetReady prepare AGE extension
+// load AGE extension
+// set graph path
 func GetReady(db *sql.DB, graphName string) (bool, error) {
 	tx, err := db.Begin()
 	if err != nil {

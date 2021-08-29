@@ -49,12 +49,12 @@ func doWithAgeWrapper(dsn string, graphName string) {
 
 	count := 0
 	for cursor.Next() {
-		entities, err := cursor.GetRow()
+		row, err := cursor.GetRow()
 		if err != nil {
 			panic(err)
 		}
 		count++
-		vertex := entities[0].(*age.Vertex)
+		vertex := row[0].(*age.Vertex)
 		fmt.Println(count, "]", vertex.Id(), vertex.Label(), vertex.Props())
 	}
 
@@ -86,13 +86,13 @@ func doWithAgeWrapper(dsn string, graphName string) {
 
 	count = 0
 	for cursor.Next() {
-		entities, err := cursor.GetRow()
+		row, err := cursor.GetRow()
 		if err != nil {
 			panic(err)
 		}
 		count++
 
-		path := entities[0].(*age.Path)
+		path := row[0].(*age.Path)
 
 		vertexStart := path.GetAsVertex(0)
 		edge := path.GetAsEdge(1)

@@ -59,11 +59,11 @@ func doWithSqlAPI(dsn string, graphName string) {
 	}
 	// Unmarsal result data to Vertex row by row
 	for cypherCursor.Next() {
-		entities, err := cypherCursor.GetRow()
+		row, err := cypherCursor.GetRow()
 		if err != nil {
 			panic(err)
 		}
-		vertex := entities[0].(*age.Vertex)
+		vertex := row[0].(*age.Vertex)
 		fmt.Println(vertex.Id(), vertex.Label(), vertex.Props())
 	}
 
@@ -91,12 +91,12 @@ func doWithSqlAPI(dsn string, graphName string) {
 	}
 
 	for cypherCursor.Next() {
-		entities, err := cypherCursor.GetRow()
+		row, err := cypherCursor.GetRow()
 		if err != nil {
 			panic(err)
 		}
 
-		path := entities[0].(*age.Path)
+		path := row[0].(*age.Path)
 		vertexStart := path.GetAsVertex(0)
 		edge := path.GetAsEdge(1)
 		vertexEnd := path.GetAsVertex(2)
