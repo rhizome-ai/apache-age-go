@@ -1,8 +1,25 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package age
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
 	"database/sql"
@@ -201,102 +218,6 @@ func TestAgeWrapper(t *testing.T) {
 	}
 
 	_, err = tx.ExecCypher(0, "MATCH (n:Person) DETACH DELETE n RETURN *")
-	if err != nil {
-		t.Fatal(err)
-	}
-	tx.Commit()
-}
-
-func TestQueryWithMapper(t *testing.T) {
-	db, err := sql.Open("postgres", dsn)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Confirm graph_path created
-	_, err = GetReady(db, graphName)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Tx begin for execute create vertex
-	tx, err := db.Begin()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Create Vertex
-	ExecCypher(tx, graphName, 0, "CREATE (n:Person {name: '%s'})", "Joe")
-	ExecCypher(tx, graphName, 0, "CREATE (n:Person {name: '%s', age: %d})", "Smith", 10)
-	ExecCypher(tx, graphName, 0, "CREATE (n:Person {name: '%s', weight:%f})", "Jack", 70.3)
-
-	tx.Commit()
-
-	tx, err = db.Begin()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Match
-	mapCursor, err := ExecCypherMap(tx, graphName, 1, "MATCH (n:Person) RETURN n")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	mapCursor.PutType("Person", reflect.TypeOf(VPerson{}))
-
-	count := 0
-	for mapCursor.Next() {
-		entities, err := mapCursor.GetRow()
-		if err != nil {
-			t.Fatal(err)
-		}
-		count++
-		person := entities[0].(VPerson)
-
-		fmt.Println(count, "]", person.Name, person.Age, person.Weight)
-	}
-
-	// Create Path
-	ExecCypher(tx, graphName, 0, "MATCH (a:Person), (b:Person) WHERE a.name='%s' AND b.name='%s' CREATE (a)-[r:workWith {weight: %d}]->(b)",
-		"Jack", "Joe", 3)
-
-	ExecCypher(tx, graphName, 0, "MATCH (a:Person {name: '%s'}), (b:Person {name: '%s'}) CREATE (a)-[r:workWith {weight: %d}]->(b)",
-		"Joe", "Smith", 7)
-
-	tx.Commit()
-
-	tx, err = db.Begin()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Query Path
-	mapCursor, err = ExecCypherMap(tx, graphName, 3, "MATCH (a)-[b:workWith]-(c) RETURN a,b,c")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	mapCursor.PutType("Person", reflect.TypeOf(VPerson{}))
-	mapCursor.PutType("workWith", reflect.TypeOf(EWorkWith{}))
-
-	count = 0
-	for mapCursor.Next() {
-		entities, err := mapCursor.GetRow()
-		if err != nil {
-			t.Fatal(err)
-		}
-		count++
-		person1 := entities[0].(VPerson)
-		workWith := entities[1].(EWorkWith)
-		person2 := entities[2].(VPerson)
-
-		fmt.Println(count, "]", person1, workWith, person2)
-	}
-
-	// Clear Data
-	_, err = ExecCypher(tx, graphName, 0, "MATCH (n:Person) DETACH DELETE n RETURN *")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -8,6 +8,6 @@ Go driver for Apache AGE, graph extention for PostgreSQL.
 # prerequisites : 
 #    - java over 8
 #    - download ANTLR4 from https://www.antlr.org/download/antlr-4.9.2-complete.jar
-#    - java -cp antlr-4.9.2-complete.jar org.antlr.v4.Tool  -Dlanguage=Go -visitor Age.g4 
+#    - java -cp antlr-4.9.2-complete.jar org.antlr.v4.Tool  -Dlanguage=Go -visitor Agtype.g4 
 ```
 

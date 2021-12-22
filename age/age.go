@@ -1,10 +1,27 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package age
 
 import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"reflect"
 )
 
 // GetReady prepare AGE extension
@@ -101,46 +118,6 @@ func ExecCypher(tx *sql.Tx, graphName string, columnCount int, cypher string, ar
 	}
 	return cypherCursor, err
 }
-
-// ExecCypherMap
-// CREATE , DROP ....
-// MATCH .... RETURN ....
-// CREATE , DROP .... RETURN ...
-func ExecCypherMap(tx *sql.Tx, graphName string, columnCount int, cypher string, args ...interface{}) (*CypherMapCursor, error) {
-	cursor, err := execCypher(NewCypherMapCursor, tx, graphName, columnCount, cypher, args...)
-	var cypherMapCursor *CypherMapCursor
-	if cursor != nil {
-		cypherMapCursor = cursor.(*CypherMapCursor)
-	}
-	return cypherMapCursor, err
-}
-
-// // ExecCypher execute without return
-// // CREATE , DROP .... */
-// func ExecCypher2(tx *sql.Tx, graphName string, cypher string, args ...interface{}) error {
-// 	cypherStmt := fmt.Sprintf(cypher, args...)
-// 	stmt := fmt.Sprintf("SELECT * from cypher('%s', $$ %s $$) as (v agtype);",
-// 		graphName, cypherStmt)
-
-// 	_, err := tx.Exec(stmt)
-// 	return err
-// }
-
-// // QueryCypher execute with return
-// // MATCH .... RETURN ....
-// // CREATE , DROP .... RETURN ...
-// func QueryCypher(tx *sql.Tx, graphName string, cypher string, args ...interface{}) (*CypherCursor, error) {
-// 	cypherStmt := fmt.Sprintf(cypher, args...)
-// 	stmt := fmt.Sprintf("SELECT * from cypher('%s', $$ %s $$) as (v agtype);",
-// 		graphName, cypherStmt)
-
-// 	rows, err := tx.Query(stmt)
-// 	if err != nil {
-// 		return nil, err
-// 	} else {
-// 		return NewCypherCursor(1, rows), nil
-// 	}
-// }
 
 type Age struct {
 	db        *sql.DB
@@ -242,10 +219,6 @@ func (a *AgeTx) ExecCypher(columnCount int, cypher string, args ...interface{}) 
 	return ExecCypher(a.tx, a.age.graphName, columnCount, cypher, args...)
 }
 
-func (a *AgeTx) ExecCypherMap(columnCount int, cypher string, args ...interface{}) (*CypherMapCursor, error) {
-	return ExecCypherMap(a.tx, a.age.graphName, columnCount, cypher, args...)
-}
-
 type CypherCursor struct {
 	Cursor
 	columnCount int
@@ -280,6 +253,7 @@ func (c *CypherCursor) GetRow() ([]Entity, error) {
 			fmt.Println(i, ">>", gstr)
 			return nil, err
 		}
+		fmt.Println("Age GetRow : [", i, "] ", e)
 		entArr[i] = e
 	}
 
@@ -288,41 +262,4 @@ func (c *CypherCursor) GetRow() ([]Entity, error) {
 
 func (c *CypherCursor) Close() error {
 	return c.rows.Close()
-}
-
-//
-type CypherMapCursor struct {
-	CypherCursor
-	mapper *AGMapper
-}
-
-func NewCypherMapCursor(columnCount int, rows *sql.Rows) Cursor {
-	mapper := NewAGMapper(make(map[string]reflect.Type))
-	pcursor := CypherCursor{columnCount: columnCount, rows: rows, unmarshaler: mapper}
-	return &CypherMapCursor{CypherCursor: pcursor, mapper: mapper}
-}
-
-func (c *CypherMapCursor) PutType(label string, tp reflect.Type) {
-	c.mapper.PutType(label, tp)
-}
-
-func (c *CypherMapCursor) GetRow() ([]interface{}, error) {
-	entities, err := c.CypherCursor.GetRow()
-
-	if err != nil {
-		return nil, fmt.Errorf("CypherMapCursor.GetRow:: %s", err)
-	}
-
-	elArr := make([]interface{}, c.columnCount)
-
-	for i := 0; i < c.columnCount; i++ {
-		ent := entities[i]
-		if ent.GType() == G_MAP_PATH {
-			elArr[i] = ent
-		} else {
-			elArr[i] = ent.(*SimpleEntity).Value()
-		}
-	}
-
-	return elArr, nil
 }
