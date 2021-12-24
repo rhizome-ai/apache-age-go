@@ -70,7 +70,6 @@ func (p *AGUnmarshaler) unmarshal(text string) (Entity, error) {
 	tree := p.ageParser.AgType()
 	rst := tree.Accept(p.visitor)
 
-	fmt.Println("unmarshal :: rst=", rst)
 	if len(p.errListener.errList) > 0 {
 		var ape *AgeParseError = nil
 		errs := make([]string, len(p.errListener.errList))
@@ -148,7 +147,7 @@ func (v *UnmarshalVisitor) VisitAgValue(ctx *parser.AgValueContext) interface{} 
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println("VisitAgValue::handleAnnotatedValue ", value)
+
 		return value
 	} else {
 		return valueCtx.Accept(v)
@@ -158,7 +157,6 @@ func (v *UnmarshalVisitor) VisitAgValue(ctx *parser.AgValueContext) interface{} 
 // Visit a parse tree produced by AgtypeParser#value.
 func (v *UnmarshalVisitor) VisitValue(ctx *parser.ValueContext) interface{} {
 	rtn := v.VisitChildren(ctx)
-	fmt.Println("VisitValue : rtn=", rtn)
 	return rtn
 }
 
@@ -297,7 +295,6 @@ func (v *UnmarshalVisitor) VisitObj(ctx *parser.ObjContext) interface{} {
 		pair := pairCtx.(*parser.PairContext)
 		key := strings.Trim(pair.STRING().GetText(), "\"")
 		value := pair.AgValue().Accept(v)
-		fmt.Println("Pair KEY:", key, " , VALUE:", value)
 		props[key] = value
 	}
 

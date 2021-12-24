@@ -253,7 +253,7 @@ func (c *CypherCursor) GetRow() ([]Entity, error) {
 			fmt.Println(i, ">>", gstr)
 			return nil, err
 		}
-		fmt.Println("Age GetRow : [", i, "] ", e)
+
 		entArr[i] = e
 	}
 
