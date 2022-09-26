@@ -249,7 +249,7 @@ func (c *CypherCursor) GetRow() ([]Entity, error) {
 	for i := 0; i < c.columnCount; i++ {
 		gstr := gstrs[i].(*sql.NullString)
 		if gstr.Valid {
-			e, err := c.unmarshaler.unmarshal(*gstr)
+			e, err := c.unmarshaler.unmarshal(gstr.String)
 			if err != nil {
 				fmt.Println(i, ">>", gstr)
 				return nil, err
