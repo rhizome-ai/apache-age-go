@@ -237,7 +237,7 @@ func (c *CypherCursor) Next() bool {
 func (c *CypherCursor) GetRow() ([]Entity, error) {
 	var gstrs = make([]interface{}, c.columnCount)
 	for i := 0; i < c.columnCount; i++ {
-		gstrs[i] = new(string)
+		gstrs[i] = new(sql.NullString)
 	}
 
 	err := c.rows.Scan(gstrs...)
@@ -247,14 +247,17 @@ func (c *CypherCursor) GetRow() ([]Entity, error) {
 
 	entArr := make([]Entity, c.columnCount)
 	for i := 0; i < c.columnCount; i++ {
-		gstr := gstrs[i].(*string)
-		e, err := c.unmarshaler.unmarshal(*gstr)
-		if err != nil {
-			fmt.Println(i, ">>", gstr)
-			return nil, err
+		gstr := gstrs[i].(*sql.NullString)
+		if gstr.Valid {
+			e, err := c.unmarshaler.unmarshal(*gstr)
+			if err != nil {
+				fmt.Println(i, ">>", gstr)
+				return nil, err
+			}
+			entArr[i] = e
+		} else {
+			entArr[i] = nil
 		}
-
-		entArr[i] = e
 	}
 
 	return entArr, nil
