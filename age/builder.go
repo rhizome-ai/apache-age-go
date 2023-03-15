@@ -221,7 +221,8 @@ func (v *UnmarshalVisitor) handleAnnotatedValue(anno string, ctx antlr.ParserRul
 
 func (v *UnmarshalVisitor) VisitStringValue(ctx *parser.StringValueContext) interface{} {
 	txt := ctx.GetText()
-	return strings.Trim(txt, "\"")
+	txt, _ = strconv.Unquote(txt)
+	return txt
 }
 
 func (v *UnmarshalVisitor) VisitIntegerValue(ctx *parser.IntegerValueContext) interface{} {
